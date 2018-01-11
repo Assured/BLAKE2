@@ -146,21 +146,8 @@ int blake2s_init_key( blake2s_state *S, size_t outlen, const void *key, size_t k
   return 0;
 }
 
-#define SHOW_G_VALUES 1
+/* #define SHOW_G_VALUES */
 #ifdef SHOW_G_VALUES
-#define G(r,i,a,b,c,d)                      \
-  do {                                      \
-    a = a + b + m[blake2s_sigma[r][2*i+0]]; \
-    d = rotr32(d ^ a, 16);                  \
-    c = c + d;                              \
-    b = rotr32(b ^ c, 12);                  \
-    a = a + b + m[blake2s_sigma[r][2*i+1]]; \
-    d = rotr32(d ^ a, 8);                   \
-    c = c + d;                              \
-    b = rotr32(b ^ c, 7);                   \
-  } while(0)
-
-#else
 #define G(r,i,a,b,c,d)                      \
   do {                                      \
     printf("Inputs: \n");                   \
@@ -190,6 +177,19 @@ int blake2s_init_key( blake2s_state *S, size_t outlen, const void *key, size_t k
     b = rotr32(b, 7);                       \
     printf("b4 = 0x%08x\n", b);             \
     printf("\n");                           \
+  } while(0)
+
+#else
+#define G(r,i,a,b,c,d)                      \
+  do {                                      \
+    a = a + b + m[blake2s_sigma[r][2*i+0]]; \
+    d = rotr32(d ^ a, 16);                  \
+    c = c + d;                              \
+    b = rotr32(b ^ c, 12);                  \
+    a = a + b + m[blake2s_sigma[r][2*i+1]]; \
+    d = rotr32(d ^ a, 8);                   \
+    c = c + d;                              \
+    b = rotr32(b ^ c, 7);                   \
   } while(0)
 #endif
 
