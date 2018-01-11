@@ -20,6 +20,11 @@
 #include "blake2.h"
 #include "blake2-impl.h"
 
+/* Flags for enabling dumping of internal values used for debugging. */
+/* #define SHOW_G_VALUES */
+#define DISPLAY_ROUND_STATE
+#define DISPLAY_M
+
 
 static const uint32_t blake2s_IV[8] =
 {
@@ -146,7 +151,7 @@ int blake2s_init_key( blake2s_state *S, size_t outlen, const void *key, size_t k
   return 0;
 }
 
-/* #define SHOW_G_VALUES */
+
 #ifdef SHOW_G_VALUES
 #define G(r,i,a,b,c,d)                      \
   do {                                      \
@@ -206,6 +211,7 @@ int blake2s_init_key( blake2s_state *S, size_t outlen, const void *key, size_t k
     G(r,7,v[ 3],v[ 4],v[ 9],v[14]); \
   } while(0)
 
+
 static void blake2s_compress( blake2s_state *S, const uint8_t in[BLAKE2S_BLOCKBYTES] )
 {
   uint32_t m[16];
@@ -215,6 +221,14 @@ static void blake2s_compress( blake2s_state *S, const uint8_t in[BLAKE2S_BLOCKBY
   for( i = 0; i < 16; ++i ) {
     m[i] = load32( in + i * sizeof( m[i] ) );
   }
+
+#ifdef DISPLAY_M
+  printf("State of m:\n");
+  printf("m00-07: 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x\n",
+         m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7]);
+  printf("m08-15: 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x\n",
+         m[8], m[9], m[10], m[11], m[12], m[13], m[14], m[15]);
+#endif
 
   for( i = 0; i < 8; ++i ) {
     v[i] = S->h[i];
@@ -229,6 +243,14 @@ static void blake2s_compress( blake2s_state *S, const uint8_t in[BLAKE2S_BLOCKBY
   v[14] = S->f[0] ^ blake2s_IV[6];
   v[15] = S->f[1] ^ blake2s_IV[7];
 
+#ifdef DISPLAY_ROUND_STATE
+  printf("State of v before round processing:\n");
+  printf("v00-07: 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x\n",
+         v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
+  printf("v08-15: 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x\n",
+         v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15]);
+#endif
+
   ROUND( 0 );
   ROUND( 1 );
   ROUND( 2 );
@@ -239,6 +261,14 @@ static void blake2s_compress( blake2s_state *S, const uint8_t in[BLAKE2S_BLOCKBY
   ROUND( 7 );
   ROUND( 8 );
   ROUND( 9 );
+
+#ifdef DISPLAY_ROUND_STATE
+  printf("State of v after round processing:\n");
+  printf("v00-07: 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x\n",
+         v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]);
+  printf("v08-15: 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x\n\n",
+         v[8], v[9], v[10], v[11], v[12], v[13], v[14], v[15]);
+#endif
 
   for( i = 0; i < 8; ++i ) {
     S->h[i] = S->h[i] ^ v[i] ^ v[i + 8];
