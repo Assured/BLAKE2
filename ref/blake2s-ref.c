@@ -20,6 +20,7 @@
 #include "blake2.h"
 #include "blake2-impl.h"
 
+
 static const uint32_t blake2s_IV[8] =
 {
   0x6A09E667UL, 0xBB67AE85UL, 0x3C6EF372UL, 0xA54FF53AUL,
@@ -145,6 +146,8 @@ int blake2s_init_key( blake2s_state *S, size_t outlen, const void *key, size_t k
   return 0;
 }
 
+#define SHOW_G_VALUES 1
+#ifdef SHOW_G_VALUES
 #define G(r,i,a,b,c,d)                      \
   do {                                      \
     a = a + b + m[blake2s_sigma[r][2*i+0]]; \
@@ -156,6 +159,40 @@ int blake2s_init_key( blake2s_state *S, size_t outlen, const void *key, size_t k
     c = c + d;                              \
     b = rotr32(b ^ c, 7);                   \
   } while(0)
+
+#else
+#define G(r,i,a,b,c,d)                      \
+  do {                                      \
+    printf("Inputs: \n");                   \
+    printf("a = 0x%08x, b = 0x%08x, c = 0x%08x, d = 0x%08x, m0 = 0x%08x, m1 = 0x%08x\n", a, b, c, d, (m[blake2s_sigma[r][2*i+0]]), (m[blake2s_sigma[r][2*i+1]])); \
+    a = a + b + m[blake2s_sigma[r][2*i+0]]; \
+    printf("a1 = 0x%08x\n", a);             \
+    d = d ^ a;                              \
+    printf("d1 = 0x%08x\n", d);             \
+    d = rotr32(d, 16);                      \
+    printf("d2 = 0x%08x\n", d);             \
+    c = c + d;                              \
+    printf("c1 = 0x%08x\n", c);             \
+    b = b ^ c;                              \
+    printf("b1 = 0x%08x\n", b);             \
+    b = rotr32(b, 12);                      \
+    printf("b2 = 0x%08x\n", b);             \
+    a = a + b + m[blake2s_sigma[r][2*i+1]]; \
+    printf("a2 = 0x%08x\n", a);             \
+    d = d ^ a;                              \
+    printf("d3 = 0x%08x\n", d);             \
+    d = rotr32(d, 8);                       \
+    printf("d4 = 0x%08x\n", d);             \
+    c = c + d;                              \
+    printf("c2 = 0x%08x\n", c);             \
+    b = b ^ c;                              \
+    printf("b3 = 0x%08x\n", b);             \
+    b = rotr32(b, 7);                       \
+    printf("b4 = 0x%08x\n", b);             \
+    printf("\n");                           \
+  } while(0)
+#endif
+
 
 #define ROUND(r)                    \
   do {                              \
